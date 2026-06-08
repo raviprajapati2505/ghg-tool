@@ -1,0 +1,26 @@
+pipelines:
+  default:
+    - step:
+        name: "Security Scan & Performance"
+        runs-on: 
+          - self.hosted
+          - linux
+        services:
+          - docker
+        script:
+          # 1. Run SAST Scan (Semgrep)
+          - docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep scan --json --output=sast.json --config=auto || true
+
+          # 2. Run Benchmarking (k6)
+          - docker run --rm -i grafana/k6 run - <load-test.js > k6-results.txt
+
+          # 3. Push SAST results to DefectDojo
+          - |
+            curl -X POST "${DOJO_URL}/api/v2/import-scan/" \
+              -H "Authorization: Token ${DOJO_TOKEN}" \
+              -F "active=true" \
+              -F "verified=true" \
+              -F "scan_type=Semgrep JSON Report" \
+              -F "product_name=Sustain-AI-GHG-QIA" \
+              -F "engagement_name=Automated-CI-Scan" \
+              -F "file=@sast.json"
