@@ -25,7 +25,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run lint
         run: npm run lint || true
@@ -48,7 +48,7 @@ jobs:
             
             cd /var/www/ghg.sustainoai.com/application
             git pull origin main
-            npm ci --production
+            npm install
             npm run build
             
             pm2 restart ghg-app --update-env || pm2 start /var/www/ghg.sustainoai.com/ecosystem.config.js
